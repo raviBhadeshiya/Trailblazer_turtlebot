@@ -9,7 +9,7 @@
 
   <xacro:include filename="$(find adventure_description)/urdf/sensors/asus_xtion_pro.urdf.xacro"/>
   <xacro:sensor_asus_xtion_pro parent="base_link">
-    <origin xyz="${0.0} 0.0 0.20" rpy="0.0 0.0 0.0"/>
+    <origin xyz="${0.14} 0.02 0.1" rpy="0.0 0.0 0.0"/>
   </xacro:sensor_asus_xtion_pro>
 
 

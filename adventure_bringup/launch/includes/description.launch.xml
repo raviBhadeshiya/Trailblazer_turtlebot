@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<!--
+  Robot description only (used in private and paired master).
+ -->
+<launch>
+  <arg name="name"/>
+  <arg name="urdf_file" default="$(find xacro)/xacro.py '$(find adventure_description)/$(arg name)/$(arg name).urdf.xacro'" />
+  <param name="robot_description" command="$(arg urdf_file)" />
+
+  <!-- important generally, but specifically utilised by the current app manager -->  
+  <param name="robot/name" value="$(arg name)"/>
+  <param name="robot/type" value="$(arg name)"/>
+  
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" respawn="true">
+    <param name="publish_frequency" type="double" value="5.0" />
+  </node>
+</launch>
+

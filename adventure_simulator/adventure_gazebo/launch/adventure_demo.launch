@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+  <include file="$(find adventure_gazebo)/launch/adventure_world.launch"/>
+  <node name="laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" respawn="true">
+      <remap from="image" to="/camera/depth/image_raw"/>
+  </node>
+  <include file="$(find adventure_teleop)/launch/adventure_teleop.launch"/>
+</launch>

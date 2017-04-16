@@ -1,0 +1,3 @@
+<launch>
+<node name="adventure_slam" pkg="adventure_slam" type="adventure_slam.py" output="screen"/>
+</launch>

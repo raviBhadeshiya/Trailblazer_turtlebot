@@ -71,17 +71,17 @@ def laser_callback(scan):
     indices, model = seg.segment()
     print "Found", len(indices), "inliers", model
     
-    # OpenCV line fitter - least squares
+    # # OpenCV line fitter - least squares
     # line = cv2.fitLine(points, 2, 0, 0.01, 0.01)
-    # Publish detected lines so we can see them in Rviz
+    # # Publish detected lines so we can see them in Rviz
     # marker_array.markers.append(get_line((line[3], line[2]), (line[1], line[0]), 1, (0,1,0)))
     # pub.publish(marker_array)
-
     marker_array.markers.append(get_line((model[1], model[0]), (model[4], model[3]), 0))
     pub.publish(marker_array)
-      
+    rospy.loginfo("published>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.")
 
 def main():
+    rospy.loginfo("Entered to the node>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.")
     rospy.init_node('adventure_slam', anonymous=True)
     rospy.Subscriber("/scan", LaserScan, laser_callback)
     rospy.spin()

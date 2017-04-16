@@ -6,4 +6,6 @@
       <remap from="image" to="/camera/depth/image_raw"/>
   </node>
   <include file="$(find adventure_teleop)/launch/adventure_teleop.launch"/>
+  <include file="$(find adventure_slam)/launch/adventure_slam.launch"/>
+
 </launch>

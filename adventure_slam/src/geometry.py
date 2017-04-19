@@ -3,8 +3,6 @@ import math
 # Convert world coordinate to grid coordinate
 # ------------------------------------------------------------------------------
 def to_grid(x, y, origin_x, origin_y, size_x, size_y, resolution):
-	# tx=int(x/resolution-origin_x)
-	# ty=int(y/resolution-origin_y)
 	tx=(x-origin_x)/resolution
 	ty=(y-origin_y)/resolution
 

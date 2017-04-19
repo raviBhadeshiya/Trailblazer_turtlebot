@@ -4,8 +4,8 @@ from nav_msgs.msg import OccupancyGrid, Odometry
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import PointStamped
 from math import sin, cos, degrees
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+# import matplotlib.pyplot as plt
+# import matplotlib.patches as patches
 import numpy as np
 import rospy
 # ------------------------------------------------------------------------------
@@ -29,7 +29,6 @@ class MapMaker:
 		self.grid.data = [-1] * (size_x * size_y)
 		self.numScansReceived = 0
 		self.mapData=[0.0] * (size_x * size_y)
-		# Insert additional code here if needed
 		self.pose=(0,0,0)
 
 	# ----------------------------------------------------------------------------
@@ -74,27 +73,24 @@ class MapMaker:
 				fPoints=bresenham(px,py,gx,gy)
 				#free cell
 				for i in fPoints:
-					free_cells.append(i)
-					# self.grid.data[to_index(i[0],i[1],self.size_x)]=0
-					self.mapData[to_index(i[0],i[1],self.size_x)]-=0.7 #log odd negative
+					# free_cells.append(i)
+					self.grid.data[to_index(i[0],i[1],self.size_x)]=0
+					# self.mapData[to_index(i[0],i[1],self.size_x)]-=0.7 #log odd negative
 				#occupied cell
 				occupied_cells.append((gx,gy))
-				if d < msg.range_max:
-					pr=1.6
-				else:
-					pr=0.4
-				# self.grid.data[to_index(gx,gy,self.size_x)]=100
-				self.mapData[to_index(gx,gy,self.size_x)]+=pr #log odd positive
+				# if d < msg.range_max:
+				# 	pr=1.6*2
+				# else:
+				# 	pr=0.4*2
+				self.grid.data[to_index(gx,gy,self.size_x)]=100
+				# self.mapData[to_index(gx,gy,self.size_x)]+=pr #log odd positive
 
-		for idx, val in enumerate(self.mapData):
-			if val <= -2.1: #cutoff prob
-				self.grid.data[idx]=0
-			elif val >=1.0: #cutoff prob
-				self.grid.data[idx]=100
-		# self.grid.data[np.where(self.mapData >= 2.7)]=100
-		# self.grid.data[np.where(self.mapData <= -2.1)]=0
+		# for idx, val in enumerate(self.mapData):
+		# 	if val <= -2.1: #cutoff prob
+		# 		self.grid.data[idx]=0
+		# 	elif val >=1.0: #cutoff prob
+		# 		self.grid.data[idx]=100
 		self.numScansReceived+=1
-		# self.visualize_scans(self.pose, rays,free_cells,occupied_cells, 0)
 		None
 	# ----------------------------------------------------------------------------
 	# Visualize robot pose, current laserscan, free map cells and occupied map

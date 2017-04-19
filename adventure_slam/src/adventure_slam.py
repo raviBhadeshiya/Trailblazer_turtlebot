@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy, pcl_ros, tf
+from tf import transformations as t
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Point, Quaternion
 from visualization_msgs.msg import MarkerArray, Marker
@@ -13,6 +14,14 @@ import numpy as np
 pub = rospy.Publisher('/slam_debug', MarkerArray)
 pub1=rospy.Publisher('/vo',Odometry,queue_size=10)
 antena= tf.TransformBroadcaster()
+tfListener = tf.TransformListener()
+# def getPos():
+# 	(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
+# 	orientation = tf.transformations.euler_from_quaternion(orientation)
+# 	(x, y, t) = position
+# 	(aX, aY, theta) = orientation
+# 	# print x,y,theta
+# 	return x,y,theta
 
 MIN_Inliers=70
 
@@ -25,9 +34,11 @@ def odomVisualPublisher(v,th,time):
 	current_time=time
 
 	dt=(current_time.to_sec()-last_time.to_sec())
+	# dt=1
 	voX+=v*math.cos(voT)*dt
 	voY+=v*math.sin(voT)*dt
 	voT+=th*dt
+	print str(voX)+"..."+str(voY)+"..."+str(voT)
 
 	msg=Odometry()
 	msg.header.stamp=current_time
@@ -38,10 +49,31 @@ def odomVisualPublisher(v,th,time):
 	pub1.publish(msg)
 	
 	pos = msg.pose.pose
-	antena.sendTransform((pos.position.x, pos.position.y, pos.position.z),
-		(pos.orientation.x,pos.orientation.y,pos.orientation.z,pos.orientation.w),
-		current_time, 'odom_visual','base_footprint')
+	inversed_transform = t.concatenate_matrices(t.translation_matrix((pos.position.x, pos.position.y, pos.position.z)), 
+		t.quaternion_matrix((pos.orientation.x,pos.orientation.y,pos.orientation.z,pos.orientation.w)))
+	inversed_transform = t.inverse_matrix(inversed_transform)
+	# tran = t.translation_from_matrix(inversed_transform)
+	# rot = t.quaternion_from_matrix(inversed_transform)
 	
+
+	(position1, orientation1) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time.now())
+	inversed_transform_1= t.concatenate_matrices(t.translation_matrix((position1.x, position1.y, position1.z)), 
+		t.quaternion_matrix((orientation1.x,orientation1.y,orientation1.z,pos.orientation1.w)))
+	inversed_transform_1 = t.inverse_matrix(inversed_transform_1)
+	
+
+
+	multiply=np.dot(inversed_transform,inversed_transform_1)
+	tran = t.translation_from_matrix(multiply)
+	rot = t.quaternion_from_matrix(multiply)
+	# antena.sendTransform((pos.position.x, pos.position.y, pos.position.z),
+	# 	(pos.orientation.x,pos.orientation.y,pos.orientation.z,pos.orientation.w),
+	# 	current_time, 'odom_visual','base_footprint')
+		
+	antena.sendTransform(tran,rot,
+		current_time,'base_footprint' ,'odom_visual')
+	# antena.sendTransform(tran,rot,
+	# 	current_time,'odom_visual','base_footprint')
 	last_time = current_time
 
 def get_line(p1, v1, id_, color=(0,0,1)):
@@ -195,7 +227,7 @@ def laser_callback(scan):
 
 	if len(var_pLines)!=0:
 		t,r=computeOdom(var_lines,var_pLines)
-		print str(t)+" and "+str(r)
+		# print str(t)+" and "+str(r)
 		odomVisualPublisher(t,r,rospy.Time.now())
 
 	var_pLines=var_lines
@@ -204,6 +236,14 @@ def laser_callback(scan):
 			
 def main():
 	rospy.init_node('adventure_slam', anonymous=True)
+	while True:
+		try:
+			(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time.now())
+			# (position, orientation) = tfListener.lookupTransform("/odom_visual", "/base_footprint", rospy.Time(0))
+			break
+		except:
+			rospy.loginfo("Connecting to TF...")
+
 	rospy.Subscriber("/scan", LaserScan, laser_callback)
 	rospy.spin()
 

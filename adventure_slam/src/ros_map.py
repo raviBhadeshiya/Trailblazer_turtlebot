@@ -14,6 +14,7 @@ tfListener = tf.TransformListener()
 while True:
 	try:
 		(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
+		# (position, orientation) = tfListener.lookupTransform("/odom_visual", "/base_footprint", rospy.Time(0))
 		break
 	except:
 		rospy.loginfo("Connecting to TF...")

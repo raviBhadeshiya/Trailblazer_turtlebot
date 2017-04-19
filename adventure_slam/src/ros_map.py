@@ -6,9 +6,10 @@ from nav_msgs.msg import OccupancyGrid, Odometry
 import rosbag
 import rospy
 import tf
+from std_msgs.msg import Float32MultiArray
 
 rospy.init_node('map_maker', anonymous=True)
-# mapBag=rosbag.Bag('test.bag','w')
+mapBag=rosbag.Bag('test.bag','w')
 
 tfListener = tf.TransformListener()
 while True:
@@ -46,7 +47,9 @@ pub = rospy.Publisher('/map', OccupancyGrid,queue_size=40)
 def mapCallback(msg):
 	m.pose=getPos()
 	# mapBag.write('Odometry', float(m.pose))
-	# mapBag.write('LaserScan', msg.ranges)
+	ranges=Float32MultiArray()
+	ranges.data=msg.ranges
+	mapBag.write('LaserScan', ranges)
 	m.process_scan(msg)
 	pub.publish(m.grid)
 
@@ -59,5 +62,5 @@ if __name__ == '__main__':
 	try:
 		main()
 	except rospy.ROSInterruptException:
-		# mapBag.close()
+		mapBag.close()
 		pass

@@ -14,49 +14,35 @@ pub = rospy.Publisher('/slam_debug', MarkerArray)
 pub1=rospy.Publisher('/vo',Odometry,queue_size=10)
 antena= tf.TransformBroadcaster()
 
-MIN_Inliers=75
+MIN_Inliers=70
+
 var_pLines=[]
+voX,voY,voT=0.0,0.0,0.0
+last_time = rospy.Time(0) 
 
+def odomVisualPublisher(v,th,time):
+	global last_time,voX,voY,voT
+	current_time=time
 
+	dt=(current_time.to_sec()-last_time.to_sec())
+	voX+=v*math.cos(voT)*dt
+	voY+=v*math.sin(voT)*dt
+	voT+=th*dt
 
-class odomVisual():
-	def __init__(self,pub1,antena,time,x=0.0,y=0.0,theta=0.0):
-		self.x=x
-		self.y=y
-		self.theta=theta
-		self.pub1=pub1
-		self.antena=antena		
-		self.last_time=time
-
-	def odomVisualPublisher(self,v,th,time):
-		self.current_time=time
-
-		dt=(self.current_time.to_sec()-self.last_time.to_sec())
-
-		self.theta=th*dt
-		self.x+=v*math.cos(self.theta)*dt
-		self.y+=v*math.sin(self.theta)*dt
-
-		msg=Odometry()
-		msg.header.stamp=self.current_time
-		msg.pose.pose.position=Point(self.x,self.y,0.0)
-		tx,ty,tz,tw=tf.transformations.quaternion_from_euler(0.0,0.0,self.theta)
-		msg.pose.pose.orientation=Quaternion(tx,ty,tz,tw)		
-
-		self.pub1.publish(msg)
-
-		pos = msg.pose.pose
-		self.antena.sendTransform((pos.position.x, pos.position.y, pos.position.z),
-			(pos.orientation.x,pos.orientation.y,pos.orientation.z,pos.orientation.w),
-			self.current_time,  "/odom_visual","/base_footprint")
-
-		self.last_time = self.current_time
-
-		return self.x,self.y,self.theta
-
-
-
-
+	msg=Odometry()
+	msg.header.stamp=current_time
+	msg.pose.pose.position=Point(voX,voY,0.0)
+	
+	tx,ty,tz,tw=tf.transformations.quaternion_from_euler(0.0,0.0,voT)
+	msg.pose.pose.orientation=Quaternion(tx,ty,tz,tw)		
+	pub1.publish(msg)
+	
+	pos = msg.pose.pose
+	antena.sendTransform((pos.position.x, pos.position.y, pos.position.z),
+		(pos.orientation.x,pos.orientation.y,pos.orientation.z,pos.orientation.w),
+		current_time, 'odom_visual','base_footprint')
+	
+	last_time = current_time
 
 def get_line(p1, v1, id_, color=(0,0,1)):
 	marker = Marker()
@@ -109,21 +95,16 @@ def fitLine(p):
 def angleBetweenLines(line1,line2,match=True):
 	(x1,y1),(x2,y2)=line1
 	(px1,py1),(px2,py2)=line2
-
 	if match:
 		angel=abs(math.atan((y2-y1)/float(x2-x1))-math.atan((py2-py1)/float(px2-px1)))
 	else:
 		angel=(math.atan((y2-y1)/float(x2-x1))-math.atan((py2-py1)/float(px2-px1)))
-
 	return angel
 
 def isParallel(line1,line2,thre=5.0):
-
 	angle=angleBetweenLines(line1,line2)
-	
 	if angle <= thre * (math.pi/180):
 			return True
-
 	return False
 
 
@@ -173,13 +154,7 @@ def computeOdom(lines,varPlines):
 	return t,r
 
 
-
-voX,voY,voT=0,0,0
-
-def laser_callback(scan):
-	global voX,voY,voTheta
-	odomVisualPub = odomVisual(pub1,antena,rospy.Time.now(),voX,voY,voT)
-	
+def laser_callback(scan):	
 	marker_array = MarkerArray()
 	var_lines=[]
 	# Convert the laserscan to coordinates
@@ -192,53 +167,39 @@ def laser_callback(scan):
 			continue
 		if (math.isnan(r)):
 			continue
-
 		points.append([r * math.sin(theta), r * math.cos(theta)]) 
 	
-	## convert points to pcl type
+
 	points = np.array(points, dtype=np.float32)
-	pcl_points = np.concatenate((points, np.zeros((len(points), 1))), axis=1)    
-	p = pcl.PointCloud(np.array(pcl_points, dtype=np.float32))
-	
-	if p.size > MIN_Inliers:
-		#fit the first
-		indices, model = fitLine(p)
-		
-		# print "Found", len(indices), "inliers", model
-		marker_array.markers.append(get_line((model[1], model[0]), (model[4], model[3]), 0))
-		
-		var_lines.append(((model[1], model[0]), (model[4], model[3])))
 
-		pub.publish(marker_array)
+	if len(points)/2 > MIN_Inliers:
 
-		i=1
-		pcl_points_next=removeInlinear(pcl_points,p.extract(indices))
+	## convert points to pcl type
+		pcl_points_next = np.concatenate((points, np.zeros((len(points), 1))), axis=1)    
 		
+		i=0
 		while len(pcl_points_next)/3 > MIN_Inliers:
 		#fit next line
 			p = pcl.PointCloud(np.array(pcl_points_next, dtype=np.float32))
-
 			indices, model = fitLine(p)
 
 			marker_array.markers.append(get_line((model[1], model[0]), (model[4], model[3]), i))
-			
 			var_lines.append(((model[1], model[0]), (model[4], model[3])))
 
 			pub.publish(marker_array)
-
 			pcl_points_next=removeInlinear(pcl_points_next,p.extract(indices))
 
 			i+=1
 
-	global var_pLines,odomVisualPub,rospy
-	
+	global var_pLines
+
 	if len(var_pLines)!=0:
 		t,r=computeOdom(var_lines,var_pLines)
-		print str(t)+" and "+str(r*(180/math.pi))
-		time=rospy.Time.now()
-		voX,voY,voT=odomVisualPub.odomVisualPublisher(t,r,time)
+		print str(t)+" and "+str(r)
+		odomVisualPublisher(t,r,rospy.Time.now())
 
 	var_pLines=var_lines
+
 
 			
 def main():

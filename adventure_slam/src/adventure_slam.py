@@ -17,15 +17,7 @@ pub1=rospy.Publisher('/vo',Odometry,queue_size=10)
 antena= tf.TransformBroadcaster()
 tfListener = tf.TransformListener()
 
-# def getPos():
-# 	(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
-# 	orientation = tf.transformations.euler_from_quaternion(orientation)
-# 	(x, y, t) = position
-# 	(aX, aY, theta) = orientation
-# 	# print x,y,theta
-# 	return x,y,theta
-
-MIN_Inliers=70
+MIN_Inliers=rospy.get_param('~MIN_Inliers')
 
 var_pLines=[]
 voX,voY,voT=0.0,0.0,0.0
@@ -36,11 +28,9 @@ def odomVisualPublisher(v,th,time):
 	current_time=time
 
 	dt=(current_time.to_sec()-last_time.to_sec())
-	# dt=1
 	voX+=v*math.cos(voT)*dt
 	voY+=v*math.sin(voT)*dt
 	voT+=th*dt
-	print str(voX)+"..."+str(voY)+"..."+str(voT)
 
 	msg=Odometry()
 	msg.header.stamp=current_time
@@ -54,26 +44,16 @@ def odomVisualPublisher(v,th,time):
 	inversed_transform = t.concatenate_matrices(t.translation_matrix((pos.position.x, pos.position.y, pos.position.z)), 
 		t.quaternion_matrix((pos.orientation.x,pos.orientation.y,pos.orientation.z,pos.orientation.w)))
 	inversed_transform = t.inverse_matrix(inversed_transform)
-	# tran = t.translation_from_matrix(inversed_transform)
-	# rot = t.quaternion_from_matrix(inversed_transform)
 	
-
 	(position1, orientation1) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
 	inversed_transform_1= t.concatenate_matrices(t.translation_matrix(position1), 
 		t.quaternion_matrix(orientation1))
 	inversed_transform_1 = t.inverse_matrix(inversed_transform_1)
 	
-
-
 	multiply=np.dot(inversed_transform,inversed_transform_1)
 	tran = t.translation_from_matrix(multiply)
 	rot = t.quaternion_from_matrix(multiply)
-	# antena.sendTransform((pos.position.x, pos.position.y, pos.position.z),
-	# 	(pos.orientation.x,pos.orientation.y,pos.orientation.z,pos.orientation.w),
-	# 	current_time, 'odom_visual','base_footprint')
-		
-	# antena.sendTransform(tran,rot,
-	# 	current_time,'base_footprint' ,'odom_visual')
+
 	antena.sendTransform(tran,rot,
 		current_time,'odom_visual','base_footprint')
 	last_time = current_time
@@ -105,7 +85,6 @@ def get_line(p1, v1, id_, color=(0,0,1)):
 	marker.points.append(Point(p1[0] - 100 * v1[0], p1[1] - 100 * v1[1], 0))
 	return marker
 
-
 def removeInlinear(pcl_points,data):
 	npData=np.asarray(data,dtype=np.float32)
 	npData=set(tuple(x) for x in npData)
@@ -114,17 +93,15 @@ def removeInlinear(pcl_points,data):
 	pcl_points_set=list(pcl_points_set)
 	return pcl_points_set
 
-
 def fitLine(p):
-	## create a segmenter object
+	# create a segmenter object
 	seg = p.make_segmenter()
 	seg.set_model_type(pcl.SACMODEL_LINE)
 	seg.set_method_type(pcl.SAC_RANSAC)
 	seg.set_distance_threshold (0.003)
-	## apply RANSAC
+	# apply RANSAC
 	indices, model = seg.segment()
 	return indices,model
-
 
 def angleBetweenLines(line1,line2,match=True):
 	(x1,y1),(x2,y2)=line1
@@ -140,7 +117,6 @@ def isParallel(line1,line2,thre=5.0):
 	if angle <= thre * (math.pi/180):
 			return True
 	return False
-
 
 def parallelDist(line1,line2,match=True):
 	(x1,y1),(x2,y2)=line1
@@ -187,7 +163,6 @@ def computeOdom(lines,varPlines):
 
 	return t,r
 
-
 def laser_callback(scan):	
 	marker_array = MarkerArray()
 	var_lines=[]
@@ -203,7 +178,6 @@ def laser_callback(scan):
 			continue
 		points.append([r * math.sin(theta), r * math.cos(theta)]) 
 	
-
 	points = np.array(points, dtype=np.float32)
 
 	if len(points)/2 > MIN_Inliers:
@@ -229,28 +203,22 @@ def laser_callback(scan):
 
 	if len(var_pLines)!=0:
 		t,r=computeOdom(var_lines,var_pLines)
-		# print str(t)+" and "+str(r)
 		odomVisualPublisher(t,r,rospy.Time.now())
 
 	var_pLines=var_lines
 
-
-			
 def main():
 
-	# (position, orientation) = tfListener.waitForTransform("/odom", "/base_footprint", rospy.Time(0),rospy.Duration(10.0))
 	while True:
 		try:
 			(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
-			# (position, orientation) = tfListener.lookupTransform("/odom_visual", "/base_footprint", rospy.Time(0))
 			break
 		except:
-			rospy.loginfo("Connecting to TF...")
+			pass
 
-	rospy.loginfo("TF connected. Node is running.")
+	rospy.loginfo("TF connection sucessful. SLAM node is running!")
 	rospy.Subscriber("/scan", LaserScan, laser_callback)
 	rospy.spin()
-
 
 if __name__ == '__main__':
 	try:

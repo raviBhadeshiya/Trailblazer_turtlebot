@@ -1,5 +1,17 @@
 <?xml version="1.0"?>
 
 <launch>
-<node name="adventure_slam" pkg="adventure_slam" type="adventure_slam.py" output="screen"/>
+<node name="adventure_slam" pkg="adventure_slam" type="adventure_slam.py" output="screen">
+<param name="MIN_Inliers" value="50"/>
+</node>
+
+<node name="map_maker" pkg="adventure_slam" type="ros_map.py" output="screen">
+<param name="size" value="1000"/>
+<param name="origin_x" value="-50"/>
+<param name="origin_y" value="-50"/>
+<param name="resolution" value="0.1"/>
+</node>
+
+<node pkg="rosbag" type="record" name="rosbag" output="screen" args="-O $(find adventure_slam)/scan_data.bag /scan /tf /slam_debug /odom /odom_visual /map" />
+
 </launch>

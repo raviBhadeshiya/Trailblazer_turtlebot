@@ -14,7 +14,7 @@ mapBag=rosbag.Bag('test.bag','w')
 tfListener = tf.TransformListener()
 while True:
 	try:
-		(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
+		(position, orientation) = tfListener.lookupTransform("/odom_visual", "/base_footprint", rospy.Time(0))
 		# (position, orientation) = tfListener.lookupTransform("/odom_visual", "/base_footprint", rospy.Time(0))
 		break
 	except:
@@ -23,7 +23,7 @@ while True:
 rospy.loginfo("TF connection sucessful.")
 
 def getPos():
-	(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
+	(position, orientation) = tfListener.lookupTransform("/odom_visual", "/base_footprint", rospy.Time(0))
 	orientation = tf.transformations.euler_from_quaternion(orientation)
 	(x, y, t) = position
 	(aX, aY, theta) = orientation

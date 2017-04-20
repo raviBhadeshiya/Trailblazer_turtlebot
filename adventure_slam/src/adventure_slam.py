@@ -9,12 +9,14 @@ import random as random
 import cv2, math, pcl
 import numpy as np
 
+rospy.init_node('adventure_slam', anonymous=True)
 
 #Global Variables
 pub = rospy.Publisher('/slam_debug', MarkerArray)
 pub1=rospy.Publisher('/vo',Odometry,queue_size=10)
 antena= tf.TransformBroadcaster()
 tfListener = tf.TransformListener()
+
 # def getPos():
 # 	(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
 # 	orientation = tf.transformations.euler_from_quaternion(orientation)
@@ -56,9 +58,9 @@ def odomVisualPublisher(v,th,time):
 	# rot = t.quaternion_from_matrix(inversed_transform)
 	
 
-	(position1, orientation1) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time.now())
-	inversed_transform_1= t.concatenate_matrices(t.translation_matrix((position1.x, position1.y, position1.z)), 
-		t.quaternion_matrix((orientation1.x,orientation1.y,orientation1.z,pos.orientation1.w)))
+	(position1, orientation1) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
+	inversed_transform_1= t.concatenate_matrices(t.translation_matrix(position1), 
+		t.quaternion_matrix(orientation1))
 	inversed_transform_1 = t.inverse_matrix(inversed_transform_1)
 	
 
@@ -70,10 +72,10 @@ def odomVisualPublisher(v,th,time):
 	# 	(pos.orientation.x,pos.orientation.y,pos.orientation.z,pos.orientation.w),
 	# 	current_time, 'odom_visual','base_footprint')
 		
-	antena.sendTransform(tran,rot,
-		current_time,'base_footprint' ,'odom_visual')
 	# antena.sendTransform(tran,rot,
-	# 	current_time,'odom_visual','base_footprint')
+	# 	current_time,'base_footprint' ,'odom_visual')
+	antena.sendTransform(tran,rot,
+		current_time,'odom_visual','base_footprint')
 	last_time = current_time
 
 def get_line(p1, v1, id_, color=(0,0,1)):
@@ -235,15 +237,17 @@ def laser_callback(scan):
 
 			
 def main():
-	rospy.init_node('adventure_slam', anonymous=True)
+
+	# (position, orientation) = tfListener.waitForTransform("/odom", "/base_footprint", rospy.Time(0),rospy.Duration(10.0))
 	while True:
 		try:
-			(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time.now())
+			(position, orientation) = tfListener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
 			# (position, orientation) = tfListener.lookupTransform("/odom_visual", "/base_footprint", rospy.Time(0))
 			break
 		except:
 			rospy.loginfo("Connecting to TF...")
 
+	rospy.loginfo("TF connected. Node is running.")
 	rospy.Subscriber("/scan", LaserScan, laser_callback)
 	rospy.spin()
 

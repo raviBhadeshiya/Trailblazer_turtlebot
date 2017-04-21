@@ -12,6 +12,6 @@
 <param name="resolution" value="0.1"/>
 </node>
 
-<node pkg="rosbag" type="record" name="rosbag" output="screen" args="-O $(find adventure_slam)/scan_data.bag /scan /tf /slam_debug /odom /odom_visual /map" />
+<node pkg="rosbag" type="record" name="rosbag" output="screen" args="-a -O $(find adventure_slam)/scan_data.bag" />
 
 </launch>

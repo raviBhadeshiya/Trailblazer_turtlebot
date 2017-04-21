@@ -1,26 +1,13 @@
 <?xml version="1.0"?>
 
 <launch>
-  <arg name="serialport"/> 
-
-  <node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>
-  <node pkg="nodelet" type="nodelet" name="mobile_base" args="load kobuki_node/KobukiNodelet mobile_base_nodelet_manager">
-    <rosparam file="$(find kobuki_node)/param/base.yaml" command="load"/>
-    <param name="device_port" value="$(arg serialport)" />
-
-    <remap from="mobile_base/odom" to="odom"/>
-
-    <remap from="mobile_base/enable" to="enable"/>
-    <remap from="mobile_base/disable" to="disable"/>
-    <remap from="mobile_base/joint_states" to="joint_states"/>
-  </node>
-
-  <node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load yocs_cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">
-    <param name="yaml_cfg_file" value="$(find turtlebot_bringup)/param/mux.yaml"/>
-    <remap from="cmd_vel_mux/output" to="mobile_base/commands/velocity"/>
-  </node>
-  
-  <include file="$(find turtlebot_bringup)/launch/includes/kobuki/bumper2pc.launch.xml"/>
+<arg name="base"       default="$(env TURTLEBOT_BASE)"/>  
+<arg name="serialport" default="$(env TURTLEBOT_SERIAL_PORT)"/>
+<arg name="3d_sensor"  default="$(env TURTLEBOT_3D_SENSOR)" />
+<include file="$(find turtlebot_bringup)/launch/includes/mobile_base.launch.xml">
+    <arg name="base" value="$(arg base)" />
+    <arg name="serialport" value="$(arg serialport)" />
+</include>
 
   <include file="$(find adventure_bringup)/launch/3dsensor.launch"/>
 

@@ -30,7 +30,7 @@
   </include>
 
   <!-- Spawn the arm -->
-  <!--include file="$(find phantomx_arm_bringup)/launch/adventure_arm.launch">
+<!--   <include file="$(find adventure_arm_bringup)/launch/fake-arm.launch">
     <arg name="simulation" value="true"/>
-  </include-->
+  </include> -->
 </launch>

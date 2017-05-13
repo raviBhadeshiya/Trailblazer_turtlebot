@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<launch>
+  <!-- start Rviz -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find adventure_gazebo)/launch/adventure.rviz"/>
+</launch>

@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<robot name="finn" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Kobuki stuff -->
+  <xacro:include filename="$(find adventure_description)/urdf/common_properties.urdf.xacro" />
+  <xacro:include filename="$(find kobuki_description)/urdf/kobuki.urdf.xacro" />
+  <kobuki/>
+
+  <xacro:include filename="$(find adventure_description)/urdf/sensors/asus_xtion_pro.urdf.xacro"/>
+  <xacro:sensor_asus_xtion_pro parent="base_link">
+    <origin xyz="${0.28/2} -0.025 ${0.2/2}" rpy="${M_PI} 0.0 0.0"/>
+  </xacro:sensor_asus_xtion_pro>
+
+  <!--
+  <xacro:include filename="$(find adventure_description)/urdf/sensors/r200.urdf.xacro"/>
+  <xacro:sensor_r200 parent="base_link">
+    <origin xyz="${0.10/2} -0.01 0.10" rpy="0.0 0.0 0.0"/>
+  </xacro:sensor_r200>
+  -->
+  
+  <!-- Generic camera
+  <xacro:include filename="$(find adventure_description)/urdf/sensors/generic_camera.urdf.xacro" />
+  <xacro:generic_camera name="gripper_camera" parent="gripper_static_link" ros_topic="/sensors/gripper_camera/image" cam_info_topic="/sensors/gripper_camera/camera_info" update_rate="30" res_x="320" res_y="240" image_format="L8" hfov="75">
+    <origin xyz="0 0.1 0.1" rpy="0 0 0"/>
+  </xacro:generic_camera>  -->
+
+  <!-- We can configure joints velocity limit and lower/upper limits
+        to allow access to different operational areas, e.g. left handed vs. right handed robot -->
+  <!--xacro:property name="joints_vlimit" value="1.571"/>
+  <xacro:property name="pan_llimit" value="-2.617"/>
+  <xacro:property name="pan_ulimit" value="2.617"/>
+  <xacro:property name="shoulder_llimit" value="-2.2"/>
+  <xacro:property name="shoulder_ulimit" value="2.16"/>
+  <xacro:property name="elbow_llimit" value="-2.42"/>
+  <xacro:property name="elbow_ulimit" value="2.38"/>
+  <xacro:property name="wrist_llimit" value="-1.72"/>
+  <xacro:property name="wrist_ulimit" value="1.68"/-->
+
+  <!-- Arm -->
+  <xacro:include filename="$(find adventure_arm_description)/urdf/arm.xacro" />
+  <turtlebot_arm parent="base_link" color="white" gripper_color="gray"
+            joints_vlimit="1.571" 
+            pan_llimit="-2.617" 
+            pan_ulimit="2.617" 
+            shoulder_llimit="-2.2" 
+            shoulder_ulimit="2.16" 
+            elbow_llimit="-2.42" 
+            elbow_ulimit="2.38">
+     <origin xyz="0.06 0.0 0.1" rpy="0.0 0.0 ${M_PI}"/>
+  </turtlebot_arm>
+</robot>

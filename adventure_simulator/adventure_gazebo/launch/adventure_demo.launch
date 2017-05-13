@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<launch>
+  <!-- Laserscan -->
+  <include file="$(find adventure_gazebo)/launch/adventure_world.launch"/>
+  <node name="laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" respawn="true">
+      <remap from="image" to="/camera/depth/image_raw"/>
+  </node>
+
+  <!-- Moveit -->
+  <include file="$(find adventure_arm_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="false"/>
+  </include>
+
+  <include file="$(find adventure_arm_moveit_config)/launch/move_group.launch">
+    <arg name="allow_trajectory_execution" value="true"/>  
+    <arg name="fake_execution" value="false"/>
+    <arg name="info" value="true"/>
+    <arg name="debug" value="false"/>
+  </include>
+</launch>

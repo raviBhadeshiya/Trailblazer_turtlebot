@@ -11,4 +11,4 @@ For moveit: `sudo apt-get install ros-indigo-moveit`
 ## Issue with OpenCV
 
 Python API cannot find SIFT features module of OpenCV2.6.8, thus needs an upgradation to OpenCV3.0.
-Follow the instructions [here](http://docs.opencv.org/3.0-beta/doc/tutorials/introduction/linux_install/linux_install.html) to install it. 
+Follow the instructions [here](https://github.com/amitrokh/adventure/wiki/Install-OpenCV) to install it. 

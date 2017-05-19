@@ -8,9 +8,9 @@ from control_msgs.msg import FollowJointTrajectoryGoal
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 
-class TrajectoryDemo():
+class phantomXArm():
 
-	def __init__(self, goal=[0, 0, 0, 0, 0]):
+	def __init__(self):
 
 		self.reset = rospy.get_param('~reset', False)
 
@@ -22,19 +22,15 @@ class TrajectoryDemo():
 					'arm_wrist_flex_joint',
 					'gripper_link_joint']
 
-		if self.reset:
-
-			self.arm_goal =  [0, 0, 0, 0, 0]
-
-		else:
-
-			self.arm_goal = goal
-
 		rospy.loginfo('Waiting for right arm trajectory controller...')
 		self.arm_client = actionlib.SimpleActionClient('arm_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
 		self.arm_client.wait_for_server()
 		rospy.loginfo('...connected.')
+		self.arm_goal =  [0, 0, 0, 0, 0]
 
+	def setGoal(self,goal=[0, 0, 0, 0, 0]):
+
+		self.arm_goal = goal
 		self.arm_trajectory = JointTrajectory()
 		self.arm_trajectory.joint_names = self.arm_joints
 		self.arm_trajectory.points.append(JointTrajectoryPoint())
@@ -43,7 +39,7 @@ class TrajectoryDemo():
 		self.arm_trajectory.points[0].accelerations = [0.0 for i in self.arm_joints]
 		self.arm_trajectory.points[0].time_from_start = rospy.Duration(3.0) 
 
-	def moveToGoal(self):
+	def armMoveToGoal(self):
 
 		rospy.loginfo('Moving the arm to goal position...')
 

@@ -18,6 +18,7 @@ import threading
 import copy
 import rospkg
 from trajectory_demo import *
+from actionlib_msgs.msg import *
 
 
 #-------------------------------------------------------------------------------
@@ -40,7 +41,7 @@ class ObjectSearch:
 
 	# Vision
 	self.image = []
-	self.processImage = False
+	self.processImage = True #Keep it true to store the  image
 	self.lock = threading.Lock()
 
 	rospack = rospkg.RosPack()
@@ -53,7 +54,8 @@ class ObjectSearch:
 	# rospy.init_node('trajectory_demo')
 
 	# Image subscriber and cv_bridge
-	self.imageTopic = "/camera/rgb/image_raw/compressed"
+	# self.imageTopic = "/camera/rgb/image_raw/compressed"
+	self.imageTopic = "/usb_cam/image_raw/compressed"
 	self.imageSub = rospy.Subscriber(self.imageTopic,CompressedImage,self.imageCallback)    
 	self.debugImageId  = 0
 
@@ -164,7 +166,7 @@ class ObjectSearch:
 
   #-----------------------------------------------------------------------------
   # Run!
-  def move(self,waypoint):
+  def robotMoveToGoal(self,waypoint):
 	#target = Pose(point(),quaternion)
 
 	goal = MoveBaseGoal()
@@ -175,19 +177,22 @@ class ObjectSearch:
 	self.move_base.send_goal(goal)
 	timeOut = self.move_base.wait_for_result(rospy.Duration(60))
 	state = self.move_base.get_state()
+	print state
 
-	if state and timeOut == GoalStatus.SUCCEEDED:
+	if timeOut and state == GoalStatus.SUCCEEDED:
 		return True
 	else:
 		self.move_base.cancel_goal()
 		return False
 
   def run(self):
-		target=[2, 2]
-		traj=TrajectoryDemo(goal=[0.5,0.5,0.5,0.5,0.5])
+		target=[2.7, -1.6] #Target position for robot to move
+		traj=phantomXArm() #Target location for phantomX arm
 		p=Pose(Point(target[0],target[1],0),Quaternion(0,0,0,1))
-		self.move(p)
-		traj.moveToGoal()
+		traj.setGoal(goal=[0.5,0.5,0.5,0.5,0.5])
+		self.robotMoveToGoal(p)
+		traj.armMoveToGoal()
+		
 	# while True:
 	# 	rospy.sleep(0.1)
 

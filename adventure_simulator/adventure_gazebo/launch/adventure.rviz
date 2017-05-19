@@ -285,7 +285,6 @@ Visualization Manager:
       Size (m): 0.01
       Style: Points
       Topic: /camera/depth/points
-      Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
@@ -301,11 +300,10 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: true
-      Enabled: true
+      Enabled: false
       Name: Map
       Topic: /map
-      Unreliable: false
-      Value: true
+      Value: false
     - Class: rviz/Group
       Displays:
         - Alpha: 0.7
@@ -315,16 +313,12 @@ Visualization Manager:
           Enabled: true
           Name: Costmap
           Topic: /move_base/global_costmap/costmap
-          Unreliable: false
           Value: true
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
           Color: 25; 255; 0
           Enabled: true
-          Head Diameter: 0.3
-          Head Length: 0.2
-          Length: 0.3
           Line Style: Lines
           Line Width: 0.03
           Name: Planner
@@ -332,12 +326,7 @@ Visualization Manager:
             X: 0
             Y: 0
             Z: 0
-          Pose Style: None
-          Radius: 0.03
-          Shaft Diameter: 0.1
-          Shaft Length: 0.1
           Topic: /move_base/TrajectoryPlannerROS/global_plan
-          Unreliable: false
           Value: true
         - Alpha: 1
           Class: rviz/Polygon
@@ -345,9 +334,8 @@ Visualization Manager:
           Enabled: true
           Name: Robot Footprint
           Topic: /move_base/global_costmap/obstacle_layer_footprint/footprint_stamped
-          Unreliable: false
           Value: true
-      Enabled: false
+      Enabled: true
       Name: Global Map
     - Class: rviz/Group
       Displays:
@@ -358,16 +346,12 @@ Visualization Manager:
           Enabled: true
           Name: Costmap
           Topic: /move_base/local_costmap/costmap
-          Unreliable: false
           Value: true
         - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
           Color: 25; 255; 0
           Enabled: true
-          Head Diameter: 0.3
-          Head Length: 0.2
-          Length: 0.3
           Line Style: Lines
           Line Width: 0.03
           Name: Planner
@@ -375,12 +359,7 @@ Visualization Manager:
             X: 0
             Y: 0
             Z: 0
-          Pose Style: None
-          Radius: 0.03
-          Shaft Diameter: 0.1
-          Shaft Length: 0.1
           Topic: /move_base/TrajectoryPlannerROS/local_plan
-          Unreliable: false
           Value: true
       Enabled: false
       Name: Local Map
@@ -394,7 +373,6 @@ Visualization Manager:
       Normalize Range: true
       Queue Size: 2
       Transport Hint: raw
-      Unreliable: false
       Value: false
     - Class: rviz/Image
       Enabled: false
@@ -406,7 +384,6 @@ Visualization Manager:
       Normalize Range: true
       Queue Size: 2
       Transport Hint: raw
-      Unreliable: false
       Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -434,7 +411,6 @@ Visualization Manager:
       Size (m): 0.01
       Style: Flat Squares
       Topic: /scan
-      Unreliable: false
       Use Fixed Frame: true
       Use rainbow: false
       Value: true
@@ -443,9 +419,6 @@ Visualization Manager:
       Class: rviz/Path
       Color: 255; 85; 255
       Enabled: true
-      Head Diameter: 0.3
-      Head Length: 0.2
-      Length: 0.3
       Line Style: Lines
       Line Width: 0.03
       Name: Path
@@ -453,12 +426,7 @@ Visualization Manager:
         X: 0
         Y: 0
         Z: 0
-      Pose Style: None
-      Radius: 0.03
-      Shaft Diameter: 0.1
-      Shaft Length: 0.1
       Topic: /move_base/NavfnROS/plan
-      Unreliable: false
       Value: true
     - Class: rviz/Image
       Enabled: false
@@ -470,7 +438,6 @@ Visualization Manager:
       Normalize Range: true
       Queue Size: 2
       Transport Hint: raw
-      Unreliable: false
       Value: false
     - Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
@@ -940,16 +907,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.72811
+      Distance: 4.84551
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.19243
-        Y: 0.714829
-        Z: -0.308408
+        X: 1.97644
+        Y: 0.303049
+        Z: -1.3176
       Name: Current View
       Near Clip Distance: 0.01
       Pitch: 0.7848
@@ -992,9 +959,9 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1855
-  X: 453
+  X: 55
   Xtion Depth:
     collapsed: false
   Xtion RGB:
     collapsed: false
-  Y: 32
+  Y: 14

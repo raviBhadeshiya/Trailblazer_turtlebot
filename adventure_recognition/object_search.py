@@ -147,7 +147,7 @@ class ObjectSearch:
   # Image callback
   def imageCallback(self, data):
 
-  	
+	
 
 	# Capture image
 	np_arr = np.fromstring(data.data, np.uint8)
@@ -155,24 +155,22 @@ class ObjectSearch:
 	self.cv_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR) # OpenCV 3.0
 	# cv_image = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR) # OpenCV 2.4
 
-
 	# Store it if required
 	self.lock.acquire()
-
 	if self.processImage:
 		self.image = copy.deepcopy(self.cv_image)
-	 	self.processImage = False
+		self.processImage = False
 
 
-	# for img in self.trainingImages:
-	# 	# print "inside for loop"
-	# 	if self.computeSiftFeatures(img, self.cv_image):
-	# 		print "inside for loop"
-	# 		break
+	for img in self.trainingImages:
+		# print "inside for loop"
+		if self.computeSiftFeatures(img, self.cv_image):
+			print "inside for loop"
+			break
 
 	# Show image
-	# cv2.imshow("Image live feed", self.cv_image)
-	cv2.waitKey(0)
+	cv2.imshow("Image live feed", self.cv_image)
+	cv2.waitKey(1)
 
 	self.lock.release()
 	# print "Call back out!"
@@ -184,7 +182,6 @@ class ObjectSearch:
 	# First get the image to be processed
 	self.processImage = True
 	while (self.processImage):
-		print "Checking.."
 		rospy.sleep(0.01)
 
 	#Display image
@@ -197,8 +194,8 @@ class ObjectSearch:
 	# self.debugImageId += 1
 
 
-  def computeSiftFeatures(self, img1, img2):
-  	MIN_MATCH_COUNT = 10
+  def computeSiftFeatures(self, img1, _img2):
+	MIN_MATCH_COUNT = 10
 	# img1 = cv2.imread('images/train/temp.jpg',0)          # queryImage
 	# img2 = cv2.imread('images/train/cpp.jpg',0) # trainImage
 
@@ -209,7 +206,7 @@ class ObjectSearch:
 	#img2=query image
 
 	img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-	img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+	img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
 
 	sift = cv2.xfeatures2d.SIFT_create()
 
@@ -229,25 +226,26 @@ class ObjectSearch:
 	good = []
 	for m,n in matches:
 	    if m.distance < 0.7*n.distance:
-	        good.append(m)
+		   good.append(m)
 
 	if len(good)>MIN_MATCH_COUNT:
 	    src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
 	    dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
 	    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
-	    matchesMask = mask.ravel().tolist()
+	    if mask != None:
+		    matchesMask = mask.ravel().tolist()
 
-	    h,w = img1.shape
-	    pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-	    dst = cv2.perspectiveTransform(pts,M)
+		    h,w = img1.shape
+		    pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+		    dst = cv2.perspectiveTransform(pts,M)
 
-	    self.cv_image=cv2.polylines(self.cv_image,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+		    cv2.polylines(self.cv_image,[np.int32(dst)],True,255,3, cv2.LINE_AA)
 	    # cv2.imshow("img2",img2)
 	else:
 	    print "Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT)
 	    matchesMask = None
-	    self.cv_image=img2
+	    self.cv_image=_img2
 	    return False
 
 	# if matchesMask != None:    
@@ -290,19 +288,20 @@ class ObjectSearch:
 		self.robotMoveToGoal(p)
 		traj.armMoveToGoal()
 		
-		while True:
-			self.capture_image()
+		# while True:
+		# 	self.capture_image()
 			
-			rospy.sleep(0.1)
+		# 	rospy.sleep(0.1)
 
-			for img in self.trainingImages:
-				if self.computeSiftFeatures(img, self.cv_image):
-					print "inside for loop"
-					break	
-			cv2.imshow("Image live feed", self.cv_image)
-			cv2.waitKey(3)
-	# while True:
-	# 	rospy.sleep(0.1)
+		# 	for img in self.trainingImages:
+		# 		if self.computeSiftFeatures(img, self.cv_image):
+		# 			print "inside for loop"
+		# 			break	
+		# 	cv2.imshow("Image live feed", self.cv_image)
+		# 	cv2.waitKey(3)
+		while True:
+	# 	# self.capture_image()
+			rospy.sleep(0.1)
 
 #-------------------------------------------------------------------------------
 # Main

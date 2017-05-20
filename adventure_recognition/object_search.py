@@ -27,10 +27,10 @@ from matplotlib import pyplot as plt
 #-------------------------------------------------------------------------------
 class ObjectSearch:
   def __init__(self):
-  		# Initialize node
+		# Initialize node
 	rospy.init_node('adventure_recognition')
 
-  	self.move_base = actionlib.SimpleActionClient("move_base",MoveBaseAction)
+	self.move_base = actionlib.SimpleActionClient("move_base",MoveBaseAction)
 	rospy.loginfo("Wait for the move base server..")
 	self.move_base.wait_for_server(rospy.Duration(5))
 	rospy.loginfo("Done..")
@@ -64,6 +64,8 @@ class ObjectSearch:
 	self.armFlag=False
 	self.index =0
 	self.time=rospy.get_time()
+	self.areaThreshold=1000
+	self.dst=[]
 
 	sift = cv2.xfeatures2d.SIFT_create()
 	
@@ -81,6 +83,9 @@ class ObjectSearch:
 	self.imageTopic = "/usb_cam/image_raw/compressed"
 	self.imageSub = rospy.Subscriber(self.imageTopic,CompressedImage,self.imageCallback)    
 	self.debugImageId  = 0
+	self.velPub = rospy.Publisher('/cmd_vel_mux/input/navi', Twist, queue_size=10)
+	self.linearVel = Twist()
+	self.angularVel = Twist()
 
 	# Generate goal poses
 	self.goalPoses = []
@@ -166,6 +171,22 @@ class ObjectSearch:
 		if rospy.get_time() - self.time > 2:
 			if self.computeSiftFeatures(self.trainingImages[0], self.cv_image):
 				self.imageFlag = True
+
+				h,w=self.dst.item(3)-self.dst.item(1), self.dst.item(4)-self.dst.item(2)
+				x,y = int(self.dst.item(0)+(w/2)),int(self.dst.item(1)+h/2)
+				area = h*w
+				
+				temp1,sizeY,temp2=self.cv_image.shape
+
+				if abs(y-sizeY/2) < 10:
+					t=y-sizeY/abs(t-sizeY)
+					self.angularVel.angular.z=0.1*t
+					self.velPub.publish(self.angularVel)
+
+				elif area < 1500:
+					self.linearVel.linear.x=0.1
+					self.velPub.publish(self.linearVel)
+
 			cv2.imshow("Image live feed", self.cv_image)
 			cv2.waitKey(1)
 			self.time=rospy.get_time()
@@ -229,9 +250,9 @@ class ObjectSearch:
 
 		    h,w = img1.shape
 		    pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-		    dst = cv2.perspectiveTransform(pts,M)
+		    self.dst = cv2.perspectiveTransform(pts,M)
 
-		    cv2.polylines(self.cv_image,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+		    cv2.polylines(self.cv_image,[np.int32(self.dst)],True,255,3, cv2.LINE_AA)
 	else:
 	    print "Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT)
 	    matchesMask = None

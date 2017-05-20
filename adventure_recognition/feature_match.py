@@ -42,10 +42,15 @@ if len(good)>MIN_MATCH_COUNT:
     h,w = img1.shape
     pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
     dst = cv2.perspectiveTransform(pts,M)
+    print dst
+    print dst.item(1)
 
+    h,w=dst.item(3)-dst.item(1), dst.item(4)-dst.item(2)
+    print h*w  
     img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+    img2 = cv2.circle(img2, (int(dst.item(0)+(w/2)),int(dst.item(1)+h/2)), 10, (0,0,255),-1)
     cv2.imshow("img2",img2)
-    # cv2.waitkey(1)
+    cv2.waitKey(0)
 
 else:
     print "Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT)

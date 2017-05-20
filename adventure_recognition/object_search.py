@@ -202,12 +202,13 @@ class ObjectSearch:
 				x,y = int(self.dst.item(0)+(w/2)),int(self.dst.item(1)+h/2)
 				area = h*w
 				if not abs(x-275) < 50:
-					t=-3 if x-275> 0 else 3
+					t=-5 if x-275> 0 else 5
 					self.rotate(t)
-				if area < 100000:
-						self.translate(1)
-				else:	
-					self.imageFlag = True
+				else:
+					if area < 100000:
+							self.translate(1)
+					else:	
+						self.imageFlag = True
 			else:
 				self.rotate(10)
 				print "else condition"

@@ -55,8 +55,8 @@ class ObjectSearch:
 	rospack = rospkg.RosPack()
 	self.debugImageDir = rospack.get_path('adventure_recognition') + "/images/debug/"
 	self.trainImageDir = rospack.get_path('adventure_recognition') + "/images/train/"
-	# self.trainImageNames = ['bottle_0.jpg', 'bottle_1.jpg', 'bottle_1.jpg', 'temp.jpg']
-	self.trainImageNames = ['temp.jpg']
+	self.trainImageNames = ['bottle_0.jpg', 'bottle_1.jpg', 'bottle_1.jpg']
+	# self.trainImageNames = ['temp.jpg']
 
 	#Flags
 	self.moveFlag=False
@@ -79,8 +79,8 @@ class ObjectSearch:
 
 
 	# Image subscriber and cv_bridge
-	# self.imageTopic = "/camera/rgb/image_raw/compressed"
-	self.imageTopic = "/usb_cam/image_raw/compressed"
+	self.imageTopic = "/camera/rgb/image_raw/compressed"
+	# self.imageTopic = "/usb_cam/image_raw/compressed"
 	self.imageSub = rospy.Subscriber(self.imageTopic,CompressedImage,self.imageCallback)    
 	self.debugImageId  = 0
 	self.velPub = rospy.Publisher('/cmd_vel_mux/input/navi', Twist, queue_size=10)
@@ -96,12 +96,18 @@ class ObjectSearch:
 	self.goalPoses.append(p)
 
 	target=[0.4,0.0] 
-	p=Pose(Point(target[0],target[1],0),Quaternion(0,0,0,1))
+	p=Pose(Point(target[0],target[1],0),Quaternion(0,0,0.86603175470726,0.499988999717658))
 	self.goalPoses.append(p)
 
 	target=[0.7,-1.6] 
-	p=Pose(Point(target[0],target[1],0),Quaternion(0,0,0,1))
+	p=Pose(Point(target[0],target[1],0),Quaternion(0,0,-0.707106781186548,0.707106781186548))
 	self.goalPoses.append(p)
+
+	traj=phantomXArm() #Target location for phantomX arm
+	traj.setGoal()
+	traj.armMoveToGoal()
+	rospy.sleep(5)
+
 
   #-------------------------------------------------------------------------------
   # Draw matches between a training image and test image
@@ -155,6 +161,27 @@ class ObjectSearch:
 	# Also return the image if you'd like a copy
 	return out
 
+  def rotate(self,t):
+  	self.angularVel.angular.z=-0.1*t
+  	self.publisher(self.angularVel)
+  	rospy.sleep(0.3)
+  	self.angularVel.angular.z=0
+  	self.publisher(self.angularVel)
+
+  def translate(self,t):
+  	self.linearVel.linear.x=0.1*t
+  	self.publisher(self.linearVel)
+  	rospy.sleep(0.3)
+  	self.linearVel.linear.x=0
+  	self.publisher(self.linearVel)
+
+  def publisher(self,msg):
+  	r = rospy.Rate(10)
+  	t = rospy.Time.now()
+  	while rospy.Time.now()-t<rospy.Duration(0.01):
+  		self.velPub.publish(msg)
+  		r.sleep()
+
   #-----------------------------------------------------------------------------
   # Image callback
   def imageCallback(self, data):
@@ -164,28 +191,27 @@ class ObjectSearch:
 	self.cv_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR) # OpenCV 3.0
 
 	if not self.moveFlag and not self.imageFlag and not self.armFlag:
-		self.moveFlag=True
 		self.robotMoveToGoal(self.goalPoses[self.index])
+		self.moveFlag=True
 
 	if self.moveFlag and not self.imageFlag and not self.armFlag:
-		if rospy.get_time() - self.time > 2:
-			if self.computeSiftFeatures(self.trainingImages[0], self.cv_image):
-				self.imageFlag = True
-
+		if rospy.get_time() - self.time > 1:
+			if self.computeSiftFeatures(self.trainingImages[self.index], self.cv_image):
+				# self.imageFlag = True	
 				h,w=self.dst.item(3)-self.dst.item(1), self.dst.item(4)-self.dst.item(2)
 				x,y = int(self.dst.item(0)+(w/2)),int(self.dst.item(1)+h/2)
 				area = h*w
-				
-				temp1,sizeY,temp2=self.cv_image.shape
-
-				if abs(y-sizeY/2) < 10:
-					t=y-sizeY/abs(t-sizeY)
-					self.angularVel.angular.z=0.1*t
-					self.velPub.publish(self.angularVel)
-
-				elif area < 1500:
-					self.linearVel.linear.x=0.1
-					self.velPub.publish(self.linearVel)
+				if not abs(x-275) < 50:
+					t=-3 if x-275> 0 else 3
+					self.rotate(t)
+				if area < 100000:
+						self.translate(1)
+				else:	
+					self.imageFlag = True
+			else:
+				self.rotate(10)
+				print "else condition"
+				rospy.sleep(0.1)
 
 			cv2.imshow("Image live feed", self.cv_image)
 			cv2.waitKey(1)
@@ -194,15 +220,8 @@ class ObjectSearch:
 	if self.moveFlag and  self.imageFlag and not self.armFlag:
 		cv2.destroyAllWindows()
 		cv2.waitKey(1)
+		self.armProcess()
 
-		traj=phantomXArm() #Target location for phantomX arm
-		traj.setGoal(goal=[-0.5,-0.5,-0.5,-0.5,-0.5])
-		traj.armMoveToGoal()
-		rospy.sleep(1)
-		traj.setGoal()
-		traj.armMoveToGoal()
-		rospy.sleep(1)
-		print "ARm out"
 		self.imageFlag= False
 		self.moveFlag=False
 
@@ -211,6 +230,22 @@ class ObjectSearch:
 		else:
 			self.index=0
 			self.armFlag = True
+			rospy.loginfo("Goal Reached!!!!")
+
+  def armProcess(self):
+	traj=phantomXArm() #Target location for phantomX arm
+	traj.setGoal()
+	traj.armMoveToGoal()
+	rospy.sleep(5)
+	traj.setGoal(goal=[-1,-1.4,-0.3,0,0])
+	traj.armMoveToGoal()
+	rospy.sleep(5)
+	traj.setGoal(goal=[1,-1.4,-0.3,0,0])
+	traj.armMoveToGoal()		
+	rospy.sleep(5)
+	traj.setGoal()
+	traj.armMoveToGoal()
+	rospy.sleep(5)  	
 
   #-------------------------------------------------------------------------------
   # Capture image, display it and save it to the debug folder

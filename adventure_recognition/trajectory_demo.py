@@ -53,12 +53,6 @@ class phantomXArm():
 		
 		if not self.sync:
 
-			self.arm_client.wait_for_result(rospy.Duration(5.0))
+			self.arm_client.wait_for_result(rospy.Duration(60))
 
 		rospy.loginfo('...done')
-
-# if __name__=='__main__':
-# 	print "Execution started!"
-# 	# traj=TrajectoryDemo()
-# 	traj=TrajectoryDemo(goal=[0.5, 0.5, 0.5, 0.5, 0.5])
-# 	traj.moveToGoal()

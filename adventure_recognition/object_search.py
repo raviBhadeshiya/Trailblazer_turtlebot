@@ -27,8 +27,15 @@ from matplotlib import pyplot as plt
 #-------------------------------------------------------------------------------
 class ObjectSearch:
   def __init__(self):
+  		# Initialize node
+	rospy.init_node('adventure_recognition')
 
+  	self.move_base = actionlib.SimpleActionClient("move_base",MoveBaseAction)
+	rospy.loginfo("Wait for the move base server..")
+	self.move_base.wait_for_server(rospy.Duration(5))
+	rospy.loginfo("Done..")
 	# Navigation
+	
 	self.goalStatesText = ['PENDING',
 					  'ACTIVE',
 					  'PREEMPTED',
@@ -51,16 +58,17 @@ class ObjectSearch:
 	# self.trainImageNames = ['bottle_0.jpg', 'bottle_1.jpg', 'bottle_1.jpg', 'temp.jpg']
 	self.trainImageNames = ['temp.jpg']
 
-	# Initialize node
-	rospy.init_node('adventure_recognition')
-	# rospy.init_node('trajectory_demo')
-
+	#Flags
+	self.moveFlag=False
+	self.imageFlag=False
+	self.armFlag=False
+	self.index =0
+	self.time=rospy.get_time()
 
 	sift = cv2.xfeatures2d.SIFT_create()
 	
 	self.trainingImages = []
-	# self.kp = []
-	# self.des = []
+
 
 	for string in self.trainImageNames:
 		img = cv2.imread(os.path.join(self.trainImageDir,string))
@@ -77,19 +85,18 @@ class ObjectSearch:
 	# Generate goal poses
 	self.goalPoses = []
 
-	#Subcribe to move_base action server
-	self.move_base = actionlib.SimpleActionClient("move_base",MoveBaseAction)
-	rospy.loginfo("Wait for the move base server..")
-	self.move_base.wait_for_server(rospy.Duration(5))
-	rospy.loginfo("Done..")
 
-			# kp, des = sift.detectAndCompute(img,None)
-			# self.kp.append(kp), self.des.append(des)
-			# i+=1
+	target=[2.7, -1.6] 
+	p=Pose(Point(target[0],target[1],0),Quaternion(0,0,0,1))
+	self.goalPoses.append(p)
 
-	# self.flannIndexKDtree = 0
-	# self.index_params = dict(algorithm = self.flannIndexKDtree, trees = 5)
-	# self.search_params = dict(checks = 50)
+	target=[0.4,0.0] 
+	p=Pose(Point(target[0],target[1],0),Quaternion(0,0,0,1))
+	self.goalPoses.append(p)
+
+	target=[0.7,-1.6] 
+	p=Pose(Point(target[0],target[1],0),Quaternion(0,0,0,1))
+	self.goalPoses.append(p)
 
   #-------------------------------------------------------------------------------
   # Draw matches between a training image and test image
@@ -147,82 +154,66 @@ class ObjectSearch:
   # Image callback
   def imageCallback(self, data):
 
-	
-
-	# Capture image
 	np_arr = np.fromstring(data.data, np.uint8)
 
 	self.cv_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR) # OpenCV 3.0
-	# cv_image = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR) # OpenCV 2.4
 
-	# Store it if required
-	self.lock.acquire()
-	if self.processImage:
-		self.image = copy.deepcopy(self.cv_image)
-		self.processImage = False
+	if not self.moveFlag and not self.imageFlag and not self.armFlag:
+		self.moveFlag=True
+		self.robotMoveToGoal(self.goalPoses[self.index])
 
+	if self.moveFlag and not self.imageFlag and not self.armFlag:
+		if rospy.get_time() - self.time > 2:
+			if self.computeSiftFeatures(self.trainingImages[0], self.cv_image):
+				self.imageFlag = True
+			cv2.imshow("Image live feed", self.cv_image)
+			cv2.waitKey(1)
+			self.time=rospy.get_time()
 
-	for img in self.trainingImages:
-		# print "inside for loop"
-		if self.computeSiftFeatures(img, self.cv_image):
-			print "inside for loop"
-			break
+	if self.moveFlag and  self.imageFlag and not self.armFlag:
+		cv2.destroyAllWindows()
+		cv2.waitKey(1)
 
-	# Show image
-	cv2.imshow("Image live feed", self.cv_image)
-	cv2.waitKey(1)
+		traj=phantomXArm() #Target location for phantomX arm
+		traj.setGoal(goal=[-0.5,-0.5,-0.5,-0.5,-0.5])
+		traj.armMoveToGoal()
+		rospy.sleep(1)
+		traj.setGoal()
+		traj.armMoveToGoal()
+		rospy.sleep(1)
+		print "ARm out"
+		self.imageFlag= False
+		self.moveFlag=False
 
-	self.lock.release()
-	# print "Call back out!"
+		if self.index < 2:
+			self.index +=1
+		else:
+			self.index=0
+			self.armFlag = True
 
   #-------------------------------------------------------------------------------
   # Capture image, display it and save it to the debug folder
   def capture_image(self):
 
-	# First get the image to be processed
 	self.processImage = True
 	while (self.processImage):
 		rospy.sleep(0.01)
 
-	#Display image
-	# self.lock.acquire()
-	# cv2.imshow("Captured image", self.image)
-	# self.lock.release()
-
-	# # Save image
-	# cv2.imwrite(self.debugImageDir+"image_" + str(self.debugImageId) + ".png", self.image)
-	# self.debugImageId += 1
-
-
   def computeSiftFeatures(self, img1, _img2):
+	
 	MIN_MATCH_COUNT = 10
-	# img1 = cv2.imread('images/train/temp.jpg',0)          # queryImage
-	# img2 = cv2.imread('images/train/cpp.jpg',0) # trainImage
-
-	# Initiate SIFT detector
-	# sift = cv2.SIFT()
-
-	#img1=training image
-	#img2=query image
 
 	img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 	img2 = cv2.cvtColor(_img2, cv2.COLOR_BGR2GRAY)
 
 	sift = cv2.xfeatures2d.SIFT_create()
 
-	# find the keypoints and descriptors with SIFT
 	kp1, des1 = sift.detectAndCompute(img1,None)
 	kp2, des2 = sift.detectAndCompute(img2,None)
 
-	FLANN_INDEX_KDTREE = 0
-	index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-	search_params = dict(checks = 50)
+	bf = cv2.BFMatcher()
+	matches = bf.knnMatch(des1,des2,k=2)
 
-	flann = cv2.FlannBasedMatcher(index_params, search_params)
-
-	matches = flann.knnMatch(des1,des2,k=2)
-
-	# store all the good matches as per Lowe's ratio test.
 	good = []
 	for m,n in matches:
 	    if m.distance < 0.7*n.distance:
@@ -241,24 +232,12 @@ class ObjectSearch:
 		    dst = cv2.perspectiveTransform(pts,M)
 
 		    cv2.polylines(self.cv_image,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-	    # cv2.imshow("img2",img2)
 	else:
 	    print "Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT)
 	    matchesMask = None
 	    self.cv_image=_img2
 	    return False
 
-	# if matchesMask != None:    
-	# 	draw_params = dict(matchColor = (0,255,0), # draw matches in green color
-	# 	                   singlePointColor = None,
-	# 	                   matchesMask = matchesMask, # draw only inliers
-	# 	                   flags = 2)
-
-		# self.cv_image = cv2.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
-		# self.drawMatches(img1, kp1, img2, kp2, good)
-
-
-		# plt.imshow(img3, 'gray'),plt.show()
 	return True
 
 
@@ -272,7 +251,6 @@ class ObjectSearch:
 	self.move_base.send_goal(goal)
 	timeOut = self.move_base.wait_for_result(rospy.Duration(60))
 	state = self.move_base.get_state()
-	# print state
 
 	if timeOut and state == GoalStatus.SUCCEEDED:
 		return True
@@ -281,26 +259,7 @@ class ObjectSearch:
 		return False
 
   def run(self):
-		target=[2.7, -1.6] #Target position for robot to move
-		traj=phantomXArm() #Target location for phantomX arm
-		p=Pose(Point(target[0],target[1],0),Quaternion(0,0,0,1))
-		traj.setGoal(goal=[0.5,0.5,0.5,0.5,0.5])
-		self.robotMoveToGoal(p)
-		traj.armMoveToGoal()
-		
-		# while True:
-		# 	self.capture_image()
-			
-		# 	rospy.sleep(0.1)
-
-		# 	for img in self.trainingImages:
-		# 		if self.computeSiftFeatures(img, self.cv_image):
-		# 			print "inside for loop"
-		# 			break	
-		# 	cv2.imshow("Image live feed", self.cv_image)
-		# 	cv2.waitKey(3)
 		while True:
-	# 	# self.capture_image()
 			rospy.sleep(0.1)
 
 #-------------------------------------------------------------------------------

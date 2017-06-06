@@ -23,7 +23,11 @@ Please follow the following steps in order to run the code:
   3. Launch a new terminal and type `roslaunch adventure_gazebo adventure_demo.launch`. This command will start the mandatory processes which are needed for simulation.
   4. Launch another terminal and typr `roslaunch adventure_recognition navigation.launch`. This command brings up the `move_base` server and initiates Advanced Monte-Carlo process. After this step you can assign the goal to the robot through RVIZ using *2D navigation goal* option on the tool bar. You can also check the movement of the arm mounted on the robot since this will also load OMPL library in RVIZ
 
-Above mentioned steps are the checkpoints which ensure that the services are running properly and without any interruption. However, this project cannot be tested completely in the simulation environment since there are certain things which are not modeled in the simulation. 
+Above mentioned steps are the checkpoints which ensure that the services are running properly and without any interruption. However, this project cannot be tested completely in the simulation environment since there are certain things which are not modeled in the simulation. Following is an example of the output obtained by following above mentioned steps.
+
+
+![](https://github.com/nr-parikh/pioneer/blob/master/adventure_simulator/simulation.jpg)
+
 
 ## Running the code (Hardware)
 Please ensure the following things:

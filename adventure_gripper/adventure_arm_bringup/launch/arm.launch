@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <arg name="simulation"/>
+
+  <node name="arbotix_1" pkg="arbotix_python" type="arbotix_driver" output="screen">
+      <param name="port" value="$(env ARM)"/>
+      <rosparam file="$(find adventure_arm_bringup)/config/arm.yaml" command="load" />
+  </node>
+
+  <node name="gripper_controller_1" pkg="arbotix_controllers" type="gripper_controller">
+      <param name="model" value="singlesided"/>
+      <param name="invert" value="true"/>
+      <param name="pad_width" value="0.0254"/>
+  </node>
+
+</launch>

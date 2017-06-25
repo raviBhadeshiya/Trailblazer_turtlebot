@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="name"  default="$(optenv ADVENTURE_NAME finn)"/>
+  <arg name="simulation" default="$(optenv ADVENTURE_SIMULATION false)"/>
+  <param name="/use_sim_time" value="$(arg simulation)"/>
+  
+  <include file="$(find adventure_bringup)/launch/includes/description.launch.xml">
+    <arg name="name" value="$(arg name)" />
+  </include>
+
+  <include file="$(find adventure_bringup)/launch/includes/mobile_base.launch.xml"/>
+</launch>
+
+

@@ -1,0 +1,13 @@
+<package>
+  <name>adventure_slam</name>
+  <version>0.1.0</version>
+  <description>
+     adventure_slam 
+  </description>
+  <author>Anton Mitrokhin</author>
+  <maintainer email="anton.mitrokhin@phystech.edu">Anton Mitrokhin</maintainer>
+
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+
+</package>

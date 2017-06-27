@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-
-<launch>
-  <include file="$(find adventure_bringup)/launch/minimal.launch"/>
-  <include file="$(find adventure_slam)/launch/adventure_slam.launch"/>
-
-</launch>

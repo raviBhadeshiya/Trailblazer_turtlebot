@@ -1,4 +1,4 @@
-# Pioneer: Reign of Gunters
+# Trailblazer: Reign of Gunters
 
 The key task of this project was to implement object tracking algoritm and integrate it with ROS in order to find the object of interest at a given approximate location. The object found is then pushed to the ground using the arm mounted on turtlebot. In simulation the objects of interest and obstacles were not modeled. To improve the performance, we used a feature of ROS which is very useful that is *distributed architecture*. This feature allows the *master* node to be running on the robot whereas the node which is responsible for image processing runs on the workstation. This functionality helps to overcome the limited computational capability of the single board computer or netbook on the robot and performs all the heavy computations on the workstation. 
 
